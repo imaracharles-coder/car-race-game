@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pixel Car Race</title>
+<style>
+  * { box-sizing: border-box; image-rendering: pixelated; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #1b1b2f;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+  }
+  h1 {
+    letter-spacing: 4px;
+    text-shadow: 3px 3px 0 #000;
+  }
+  #instructions {
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  #instructions span {
+    background: #444;
+    padding: 2px 8px;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    margin: 0 4px;
+  }
+  #status {
+    font-size: 22px;
+    height: 32px;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  #track {
+    position: relative;
+    width: 700px;
+    height: 220px;
+    background: repeating-linear-gradient(
+      180deg,
+      #3a3a3a 0px,
+      #3a3a3a 100px,
+      #2e2e2e 100px,
+      #2e2e2e 110px
+    );
+    border: 4px solid #fff;
+    overflow: hidden;
+  }
+  .lane {
+    position: relative;
+    height: 50%;
+    border-bottom: 2px dashed #f1c40f;
+  }
+  .lane:last-child { border-bottom: none; }
+  /* dashed center lines per lane to feel like a road */
+  .lane::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, #f1c40f 0 30px, transparent 30px 60px);
+    transform: translateY(-50%);
+    opacity: 0.6;
+  }
+  #finish {
+    position: absolute;
+    top: 0;
+    right: 40px;
+    width: 16px;
+    height: 100%;
+    background: repeating-linear-gradient(
+      45deg,
+      #fff 0 10px,
+      #000 10px 20px
+    );
+    z-index: 1;
+  }
+  .car {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 28px;
+    z-index: 2;
+  }
+  .car svg { width: 100%; height: 100%; display: block; }
+  .label {
+    position: absolute;
+    left: 10px;
+    top: 4px;
+    font-size: 12px;
+    text-shadow: 1px 1px 0 #000;
+    z-index: 3;
+  }
+  #controls-footer {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #aaa;
+  }
+  #countdown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 96px;
+    font-weight: bold;
+    text-shadow: 4px 4px 0 #000;
+    z-index: 10;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <h1>PIXEL CAR RACE</h1>
+  <div id="instructions">
+    Press <span>M</span> to start the race &nbsp;|&nbsp; Mash <span>X</span> to speed up your car!
+  </div>
+  <div id="status">Press M to start</div>
+  <div id="track">
+    <div id="countdown"></div>
+    <div id="finish"></div>
+    <div class="lane" id="laneP">
+      <div class="label">PLAYER</div>
+      <div class="car" id="carP">
+        <!-- Red top-down pixel car -->
+        <svg viewBox="0 0 16 8" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="2" width="14" height="4" fill="#c0392b"/>
+          <rect x="3" y="1" width="10" height="1" fill="#e74c3c"/>
+          <rect x="3" y="6" width="10" height="1" fill="#e74c3c"/>
+          <rect x="6" y="2" width="4" height="2" fill="#85c1e9"/>
+          <rect x="0" y="2" width="1" height="2" fill="#222"/>
+          <rect x="15" y="2" width="1" height="2" fill="#222"/>
+          <rect x="2" y="0" width="3" height="1" fill="#222"/>
+          <rect x="11" y="0" width="3" height="1" fill="#222"/>
+          <rect x="2" y="7" width="3" height="1" fill="#222"/>
+          <rect x="11" y="7" width="3" height="1" fill="#222"/>
+        </svg>
+      </div>
+    </div>
+    <div class="lane" id="laneC">
+      <div class="label">COMPUTER</div>
+      <div class="car" id="carC">
+        <!-- Blue top-down pixel car -->
+        <svg viewBox="0 0 16 8" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="2" width="14" height="4" fill="#2471a3"/>
+          <rect x="3" y="1" width="10" height="1" fill="#3498db"/>
+          <rect x="3" y="6" width="10" height="1" fill="#3498db"/>
+          <rect x="6" y="2" width="4" height="2" fill="#aed6f1"/>
+          <rect x="0" y="2" width="1" height="2" fill="#222"/>
+          <rect x="15" y="2" width="1" height="2" fill="#222"/>
+          <rect x="2" y="0" width="3" height="1" fill="#222"/>
+          <rect x="11" y="0" width="3" height="1" fill="#222"/>
+          <rect x="2" y="7" width="3" height="1" fill="#222"/>
+          <rect x="11" y="7" width="3" height="1" fill="#222"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div id="controls-footer">First to cross the checkered line wins. Press M again to restart.</div>
+
+<script>
+(() => {
+  const carP = document.getElementById('carP');
+  const carC = document.getElementById('carC');
+  const statusEl = document.getElementById('status');
+  const countdownEl = document.getElementById('countdown');
+  const track = document.getElementById('track');
+
+  const TRACK_WIDTH = track.clientWidth;
+  const CAR_WIDTH = 60;
+  const FINISH_OFFSET = 40 + 16; // matches #finish right + width
+  const FINISH_LINE = TRACK_WIDTH - FINISH_OFFSET - CAR_WIDTH;
+
+  let state = 'idle'; // idle | countdown | racing | finished
+  let playerPos = 0;
+  let computerPos = 0;
+  let playerSpeed = 0;
+  let computerSpeed = 0;
+  let lastTime = 0;
+  let rafId = null;
+
+  const PLAYER_BOOST = 4;       // distance added per X press
+  const PLAYER_DECAY = 0.92;    // speed decay per frame (so must keep mashing)
+  const PLAYER_BASE_DRIFT = 0.4; // tiny base movement so it's not totally stuck without input
+
+  function resetPositions() {
+    playerPos = 0;
+    computerPos = 0;
+    playerSpeed = 0;
+    computerSpeed = 0;
+    carP.style.transform = `translate(0px, -50%)`;
+    carC.style.transform = `translate(0px, -50%)`;
+  }
+
+  function setStatus(text) {
+    statusEl.textContent = text;
+  }
+
+  function startCountdown() {
+    if (state === 'racing' || state === 'countdown') return;
+    state = 'countdown';
+    countdownEl.textContent = '';
+    resetPositions();
+    // randomize computer's base speed each race
+    computerSpeed = 2.8 + Math.random() * 2.2; // between 2.8 and 5.0 px/frame baseline
+
+    let count = 3;
+    setStatus('');
+    countdownEl.textContent = count.toString();
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        countdownEl.textContent = count.toString();
+      } else {
+        clearInterval(interval);
+        countdownEl.textContent = 'GO!';
+        setTimeout(() => { countdownEl.textContent = ''; }, 500);
+        state = 'racing';
+        lastTime = performance.now();
+        rafId = requestAnimationFrame(gameLoop);
+      }
+    }, 700);
+  }
+
+  function gameLoop(now) {
+    if (state !== 'racing') return;
+
+    // Player: decays toward base drift, must mash X to keep speed up
+    playerSpeed *= PLAYER_DECAY;
+    playerPos += playerSpeed + PLAYER_BASE_DRIFT;
+
+    // Computer: randomized baseline with small per-frame variance
+    const variance = (Math.random() - 0.5) * 0.6;
+    computerPos += Math.max(0, computerSpeed + variance);
+
+    const clampedP = Math.min(playerPos, FINISH_LINE);
+    const clampedC = Math.min(computerPos, FINISH_LINE);
+
+    carP.style.transform = `translate(${clampedP}px, -50%)`;
+    carC.style.transform = `translate(${clampedC}px, -50%)`;
+
+    if (playerPos >= FINISH_LINE || computerPos >= FINISH_LINE) {
+      finishRace();
+      return;
+    }
+
+    rafId = requestAnimationFrame(gameLoop);
+  }
+
+  function finishRace() {
+    state = 'finished';
+    if (playerPos >= FINISH_LINE && computerPos >= FINISH_LINE) {
+      setStatus("It's a tie! Press M to race again");
+    } else if (playerPos >= FINISH_LINE) {
+      setStatus('🏁 PLAYER WINS! Press M to race again');
+    } else {
+      setStatus('🏁 COMPUTER WINS! Press M to race again');
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+
+    if (key === 'm') {
+      if (rafId) cancelAnimationFrame(rafId);
+      startCountdown();
+    }
+
+    if (key === 'x' && state === 'racing') {
+      playerSpeed += PLAYER_BOOST;
+      // cap speed so it can't grow unbounded
+      if (playerSpeed > 18) playerSpeed = 18;
+    }
+  });
+})();
+</script>
+</body>
+</html>
