@@ -33,6 +33,10 @@
     border-radius: 4px;
     margin: 0 4px;
   }
+  .mobile-only { display: none; }
+  @media (pointer: coarse) {
+    .mobile-only { display: inline; }
+  }
   #status {
     font-size: 22px;
     height: 32px;
@@ -42,7 +46,11 @@
   #track {
     position: relative;
     width: 700px;
+    max-width: 95vw;
     height: 220px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
     background: repeating-linear-gradient(
       180deg,
       #3a3a3a 0px,
@@ -123,7 +131,8 @@
 <body>
   <h1>PIXEL CAR RACE</h1>
   <div id="instructions">
-    Press <span>M</span> to start the race &nbsp;|&nbsp; Mash <span>X</span> to speed up your car!
+    Press <span>M</span> to start the race &nbsp;|&nbsp; Mash <span>X</span> to speed up your car!<br>
+    <span class="mobile-only">On mobile: tap the track to start &amp; press/hold to accelerate</span>
   </div>
   <div id="status">Press M to start</div>
   <div id="track">
@@ -192,6 +201,9 @@
   const PLAYER_BOOST = 4;       // distance added per X press
   const PLAYER_DECAY = 0.92;    // speed decay per frame (so must keep mashing)
   const PLAYER_BASE_DRIFT = 0.4; // tiny base movement so it's not totally stuck without input
+  const HOLD_BOOST = 1.4;       // per-frame speed added while holding (touch)
+
+  let isHolding = false;
 
   function resetPositions() {
     playerPos = 0;
@@ -235,7 +247,11 @@
   function gameLoop(now) {
     if (state !== 'racing') return;
 
-    // Player: decays toward base drift, must mash X to keep speed up
+    // Player: decays toward base drift, must mash X (or hold on mobile) to keep speed up
+    if (isHolding) {
+      playerSpeed += HOLD_BOOST;
+      if (playerSpeed > 18) playerSpeed = 18;
+    }
     playerSpeed *= PLAYER_DECAY;
     playerPos += playerSpeed + PLAYER_BASE_DRIFT;
 
@@ -282,6 +298,22 @@
       if (playerSpeed > 18) playerSpeed = 18;
     }
   });
+
+  // Touch / pointer controls for mobile: tap to start, press & hold to accelerate
+  track.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (state === 'idle' || state === 'finished') {
+      if (rafId) cancelAnimationFrame(rafId);
+      startCountdown();
+    } else if (state === 'racing') {
+      isHolding = true;
+    }
+  });
+
+  const stopHolding = () => { isHolding = false; };
+  track.addEventListener('pointerup', stopHolding);
+  track.addEventListener('pointercancel', stopHolding);
+  track.addEventListener('pointerleave', stopHolding);
 })();
 </script>
 </body>
